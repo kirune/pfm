@@ -1,0 +1,110 @@
+{fn fnCVS_PatientEducation()
+{local list2 = ""
+
+local pted = GET_FLOWSHEET_VALUES('Enterprise\Medicalogic\Patient Education (MU)', 'delimited')
+if pted <> "" then
+local ptedlist = getfield(pted, "|", "")
+local size1 = size(ptedlist)
+local sCount = 1
+local today = sub(str(DOCUMENT.CLINICALDATE),1,10)
+local nArray = ""
+local finalList = ""
+
+
+while sCount <= size1 DO
+nArray = getfield(ptedlist[sCount], "^", "")
+if match(nArray[3], 1, today) > 0 then
+list2 = list2 + nArray[1] + ": " + nArray[2] + " (" + nArray[3] + ")" + HRET
+else "" endif
+
+
+sCount = sCount + 1
+endwhile
+else "" endif
+if list2 <> "" then return FMT("Patient Education Provided today:", "B") + HRET + list2 else return "" endif
+}}Clinic Visit Date: {sub(str(DOCUMENT.CLINICALDATE),1,10)}
+Reason for your visit: {obsnow("Chief Cmplnt")}
+
+{if obsnow('INSTRUCTIONS') <> "" then "Based on this visit, your provider recommended the following: \n\r" +ccc_add_num_with_carriage_ret(obsnow('INSTRUCTIONS'))+"\n\r" else "" endif}
+Problems associated with your visit include:
+
+{if PROB_LIST_CHANGES('full') <> "" then ccc_add_num_with_carriage_ret(PROB_LIST_CHANGES('full')) else "<None>" endif}
+
+Complete Problems list:
+
+{if PROB_AFTER('list','dat') <> "" then "Onset Date  Problem Description/ICD Code \n\r" + ccc_add_num_with_carriage_ret(PROB_AFTER('list','dat')) else if LASTOBSVALUE('NKPROB')="T" then "No known problems" else "<None recorded>" endif endif}
+
+Most recent Vitals observed:
+
+{if obsnow("Height") <> "" then "Height: "+obsnow("height")+" inches \n\r" else "" endif}{
+if obsnow("Height (cm)") <> "" then "Height: "+obsnow("height (cm)")+" cm \n\r" else "" endif}{
+if obsnow("weight") <> "" then "Weight: "+obsnow("weight")+" pounds \n\r" else "" endif}{
+if obsnow("weight (kg)") <> "" then "Weight: "+obsnow("weight (kg)")+" kg \n\r" else "" endif}{
+if obsnow("BMI") <> "" then "BMI: "+obsnow("BMI")+"\n\r" else "" endif}{
+if obsnow("temperature") <> "" then "Temperature: "+obsnow("temperature")+" degrees F \n\r" else "" endif}{
+if obsnow("pulse rate") <> "" then "Pulse Rate: "+obsnow("pulse rate")+" beats/minute \n\r" else "" endif}{
+if obsnow("pulse rhythm") <> "" then "Pulse Rhythm: "+obsnow("pulse rhythm")+" \n\r" else "" endif}{
+if obsnow("resp rate") <> "" then "Respiration Rate: "+obsnow("resp rate")+" breaths/minute \n\r" else "" endif}{
+if obsnow("bp systolic") <> "" and obsnow("bp diastolic") <> ""then "Blood Pressure: "+obsnow("bp systolic")+" / "+obsnow("bp diastolic")+" mmHg \n\r" else "" endif}{
+if obsnow("bp sys stand") <> "" and obsnow("bp dia stand") <> ""then "Blood Pressure Standing: "+obsnow("bp sys stand")+" / "+obsnow("bp dia stand")+" mmHg \n\r" else "" endif}{
+if obsnow("bp sys lying") <> "" and obsnow("bp dia lying") <> ""then "Blood Pressure Lying: "+obsnow("bp sys lying")+" / "+obsnow("bp dia lying")+" mmHg" else "" endif}
+
+Scheduled Appointments:
+
+{APPTS_BY_STATUS("scheduled","FULL")}
+
+Immunizations:
+
+{if GET_FLOWSHEET_VALUES('Enterprise\Printing\Chart_Summary\Immunizations') <> "" then GET_FLOWSHEET_VALUES('Enterprise\Printing\Chart_Summary\Immunizations') else "<None>" endif}
+
+Procedures and Services:
+
+{if ORDERS_NEW("List","S") <> "" then ccc_add_num_with_carriage_ret(ORDERS_NEW('list','S')) else "<None>" endif}
+
+Labs, Tests and Referrals ordered:
+(Please see Order sheet for further details)
+
+{if ORDERS_NEW("List","T") <> "" then ORDERS_NEW('list','T') else if ORDERS_NEW("List","R") <> "" then ORDERS_NEW('list','R') else  "<None>" endif endif}
+{if ORDERS_NEW('list','R') <> "" and ORDERS_NEW('list','T') <> "" then ORDERS_NEW('list','R') else "" endif}
+
+Labs and Tests received in the past 3 days:
+
+
+{labs = GET_FLOWSHEET_VALUES('Enterprise\Printing\Chart_Summary\Current-Labs', 'delimited')
+if labs <> "" then
+   lablist = getfield(labs, "|", "")
+nArray = ""
+sz = size(lablist)
+list = ""
+for i = 1, i <= sz, i = i + 1 do
+dt = ""
+tody = str(._todaysdate)
+lab = lablist[i]
+if size(lab) > 0 then
+nArray = getfield(lablist[i], "^", "") 
+dt = nArray[3]
+dur = durationdays(dt, tody)
+if dur < 4 then 
+list = list + nArray[1] + ": " + nArray[2] + " (" + nArray[3] + ")" + HRET
+else
+list = list 
+endif
+else
+list = list
+endif
+endfor
+if list <> "" then list else "No lab results." endif
+else 
+"No lab results."
+endif}
+
+Your current medications include:
+
+{if MEDS_AFTER('list') <> "" then ccc_add_num_with_carriage_ret(MEDS_AFTER('list')) else if LASTOBSVALUE('NKMED')="T" then "No known medications" else "<None recorded>" endif endif}
+
+Your new medications include:
+
+{if MED_LIST_CHANGES() <> "" then ccc_add_num_with_carriage_ret(MED_LIST_CHANGES()) else "<None>" endif}
+{fnCVS_PatientEducation()}
+
+Please contact us at {LOC.PRIMPHONE} if you have any questions or concerns.
