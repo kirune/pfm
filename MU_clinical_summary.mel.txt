@@ -78,9 +78,9 @@ else
 list = list
 endif
 endfor
-if list <> "" then list else "No immunizations." endif
+if list <> "" then list else "No immunizations administered today." endif
 else 
-"No Immunizations."
+"No Immunizations administered today."
 endif}
 Procedures and Services:
 
