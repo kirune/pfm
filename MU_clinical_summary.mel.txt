@@ -55,8 +55,33 @@ Scheduled Appointments:
 
 Immunizations:
 
-{if GET_FLOWSHEET_VALUES('Enterprise\Printing\Chart_Summary\Immunizations') <> "" then GET_FLOWSHEET_VALUES('Enterprise\Printing\Chart_Summary\Immunizations') else "<None>" endif}
-
+{imms = GET_FLOWSHEET_VALUES('Enterprise\Test\Test Clinical Summary' , 'delimited')
+ if imms <> "" then
+immlist = getfield(imms, "|", "")
+nArray = ""
+sz = size(immlist)
+list = ""
+for i = 1, i <= sz, i = i + 1 do
+dt = ""
+tody = str(._todaysdate)
+imm = immlist[i]
+if size(imm) > 0 then
+nArray = getfield(immlist[i], "^", "") 
+dt = nArray[3]
+dur = durationdays(dt, tody)
+if dur < 2 then 
+list = list + nArray[1]  + ": " + nArray[2] + " (" + nArray[3] + ")" + HRET
+else
+list = list 
+endif
+else
+list = list
+endif
+endfor
+if list <> "" then list else "No immunizations." endif
+else 
+"No Immunizations."
+endif}
 Procedures and Services:
 
 {if ORDERS_NEW("List","S") <> "" then ccc_add_num_with_carriage_ret(ORDERS_NEW('list','S')) else "<None>" endif}
